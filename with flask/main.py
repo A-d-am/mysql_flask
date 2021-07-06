@@ -10,18 +10,22 @@ api = Api(app)
 class Workers(Resource):
     def post(self, id):
         parser = reqparse.RequestParser()
-        parser.add_argument("name", "position")
+        parser.add_argument("id")
+        parser.add_argument("name")
+        parser.add_argument("position")
         params = parser.parse_args()
-        return my_data.post_data(id, params["name"], params["position"])
+        return my_data.post_data(params["id"], params["name"], params["position"])
 
     def get(self, id):
         return my_data.get_data(id)
 
     def put(self, id):
         parser = reqparse.RequestParser()
-        parser.add_argument("name", "position")
+        parser.add_argument("id")
+        parser.add_argument("name")
+        parser.add_argument("position")
         params = parser.parse_args()
-        return my_data.put_data(id, params["name"], params["position"])
+        return my_data.put_data(params["id"], params["name"], params["position"])
 
     def delete(self, id):
         return my_data.delete_data(id)
@@ -29,14 +33,12 @@ class Workers(Resource):
 
 class Database:
     def post_data(self, worker_id, name, employees_position):
-        # name = data[0]
-        # employees_position = data[1]
         checking = self.check_data(worker_id)
         if checking:
             return f'User with id {worker_id} already exists', 400
         else:
             with connection.cursor() as cursor:
-                post_query = f"INSERT INTO workers (id,name,position) VALUES ('{name}', '{employees_position}') "
+                post_query = f"INSERT INTO workers (name,position) VALUES ('{name}', '{employees_position}') "
                 cursor.execute(post_query)
                 connection.commit()
             return self.rework_data(worker_id, name, employees_position), 201
@@ -45,20 +47,17 @@ class Database:
         checking = self.check_data(worker_id)
         if checking:
             with connection.cursor() as cursor:
-                get_query = f"SELECT * FROM users WHERE id = {worker_id}"
+                get_query = f"SELECT * FROM workers WHERE id = {worker_id}"
                 cursor.execute(get_query)
                 rows = cursor.fetchall()
                 for row in rows:
-                    index = row['id']
                     name = row['name']
                     position = row['position']
-                return self.rework_data(index, name, position), 200
+            return self.rework_data(worker_id, name, position)
         else:
             return 'Worker not found', 404
 
     def put_data(self, worker_id, name, employees_position):
-        # name = data[0]
-        # employees_position = data[1]
         checking = self.check_data(worker_id)
         if checking:
             with connection.cursor() as cursor:
